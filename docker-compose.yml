@@ -1,0 +1,31 @@
+services:
+  langfuse-db:
+    image: postgres:16
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=langfuse
+    ports:
+      - "5432:5432"
+    volumes:
+      - langfuse_db_data:/var/lib/postgresql/data
+
+  langfuse:
+    image: langfuse/langfuse:2
+    depends_on:
+      - langfuse-db
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@langfuse-db:5432/langfuse
+      - NEXTAUTH_SECRET=my_ultra_secure_secret_long_enough_123456789
+      - SALT=my_ultra_secure_salt_long_enough_123456789
+      - NEXTAUTH_URL=http://localhost:3000
+      - LANGFUSE_INIT_PROJECT_NAME=Lab13_Local
+      - LANGFUSE_INIT_ORG_NAME=Lab13_Org
+      - TELEMETRY_ENABLED=false
+
+volumes:
+  langfuse_db_data:

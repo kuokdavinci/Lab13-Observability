@@ -35,6 +35,13 @@ async def startup() -> None:
     )
 
 
+@app.on_event("shutdown")
+async def shutdown():
+    from .tracing import langfuse_context
+    log.info("app_shutting_down", service="api")
+    langfuse_context.flush()
+
+
 @app.get("/health")
 async def health() -> dict:
     return {"ok": True, "tracing_enabled": tracing_enabled(), "incidents": status()}
