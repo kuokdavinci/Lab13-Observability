@@ -7,3 +7,8 @@ httpx==0.28.1
 langfuse==2.57.0
 pytest==8.3.5
 prometheus-client==0.21.1
+gradio==4.44.0
+huggingface_hub==0.25.2
+plotly==5.17.0
+pandas==2.1.4
+psutil==5.9.6
