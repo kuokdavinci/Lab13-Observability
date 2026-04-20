@@ -1,20 +1,34 @@
-from dotenv import load_dotenv
 import os
-import time
-from app.tracing import observe, langfuse_context
+import logging
+from dotenv import load_dotenv
+from langfuse import Langfuse
 
+# Enable debug logging for langfuse
+logging.basicConfig(level=logging.DEBUG)
 load_dotenv()
 
-@observe()
-def test_trace():
-    print(f"Testing Langfuse with Public Key: {os.getenv('LANGFUSE_PUBLIC_KEY')[:10]}...")
-    langfuse_context.update_current_trace(name="Manual Test Trace")
-    time.sleep(1)
-    print("Sending...")
+def test_raw_client():
+    public_key = os.getenv('LANGFUSE_PUBLIC_KEY')
+    secret_key = os.getenv('LANGFUSE_SECRET_KEY')
+    host = os.getenv('LANGFUSE_HOST')
+    
+    print(f"Connecting to: {host}")
+    print(f"Public Key: {public_key[:10]}...")
+    
+    langfuse = Langfuse(
+        public_key=public_key,
+        secret_key=secret_key,
+        host=host,
+        debug=True
+    )
+    
+    try:
+        trace = langfuse.trace(name="DIAGNOSTIC_TEST")
+        print(f"Trace created: {trace.id}")
+        langfuse.flush()
+        print("Flush completed successfully.")
+    except Exception as e:
+        print(f"ERROR: {str(e)}")
 
 if __name__ == "__main__":
-    test_trace()
-    # Force flush
-    from langfuse import Langfuse
-    Langfuse().flush()
-    print("Done. Check your Langfuse dashboard now.")
+    test_raw_client()
