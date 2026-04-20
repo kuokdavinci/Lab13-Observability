@@ -8,7 +8,7 @@
 - [MEMBERS]:
   - Member A: Lê Trung Anh Quốc | Role: Logging & PII, Tracing & Enrichment
   - Member B: Trần Khánh Bằng   | Role: Metrics & Dashboards, Alerting & SLOs, Load Testing
-  - Member C: Nguyễn Đức Cường | Role: Cost optimization, Auto-instrument 
+  - Member C: Nguyễn Đức Cường | Role: Cost optimization, Script custom
   - Member D: [Name] | Role: Load Test & Dashboard
   - Member E: [Name] | Role: Demo & Report
 
