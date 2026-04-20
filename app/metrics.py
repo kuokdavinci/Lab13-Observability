@@ -8,6 +8,8 @@ from statistics import mean
 request_count = Counter('http_requests_total', 'Total number of HTTP requests', ['method', 'endpoint', 'status'])
 error_count = Counter('http_errors_total', 'Total number of HTTP errors', ['error_type'])
 latency_seconds = Histogram('http_request_duration_seconds', 'HTTP request duration in seconds', ['endpoint'])
+cache_hits = Counter('cache_hits_total', 'Total number of cache hits')
+
 
 REQUEST_LATENCIES: list[int] = []
 REQUEST_COSTS: list[float] = []
@@ -37,6 +39,11 @@ def record_error(error_type: str, method: str = 'POST', endpoint: str = '/chat',
     # Record Prometheus metrics
     error_count.labels(error_type=error_type).inc()
     request_count.labels(method=method, endpoint=endpoint, status=status).inc()
+
+
+def record_cache_hit() -> None:
+    cache_hits.inc()
+
 
 
 def percentile(values: list[int], p: int) -> float:
