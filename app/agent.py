@@ -45,11 +45,35 @@ class LabAgent:
     def __init__(self, model: str = "claude-sonnet-4-5") -> None:
         self.model = model
         self.llm = FakeLLM(model=model)
+        self._cache: dict[str, AgentResult] = {}
 
     @observe(name="chat")
     def run(self, user_id: str, feature: str, session_id: str, message: str) -> AgentResult:
         started = time.perf_counter()
         
+        # 0. Check Cache (Cost Optimization Bonus)
+        cache_key = f"{feature}:{message.strip().lower()}"
+        if cache_key in self._cache:
+            result = self._cache[cache_key]
+            # Record hit but with new latency
+            latency_ms = int((time.perf_counter() - started) * 1000)
+            metrics.record_cache_hit()
+            metrics.record_request(
+                latency_ms=latency_ms,
+                cost_usd=0.0, # Zero cost for cache hit!
+                tokens_in=0,
+                tokens_out=0,
+                quality_score=result.quality_score,
+            )
+            return AgentResult(
+                answer=result.answer + " (Cached)",
+                latency_ms=latency_ms,
+                tokens_in=0,
+                tokens_out=0,
+                cost_usd=0.0,
+                quality_score=result.quality_score,
+            )
+
         # 1. Cập nhật Trace Metadata
         langfuse_context.update_current_trace(
             user_id=hash_user_id(user_id),
@@ -70,6 +94,18 @@ class LabAgent:
         latency_ms = int((time.perf_counter() - started) * 1000)
         cost_usd = self._estimate_cost(response.usage.input_tokens, response.usage.output_tokens)
 
+        result = AgentResult(
+            answer=response.text,
+            latency_ms=latency_ms,
+            tokens_in=response.usage.input_tokens,
+            tokens_out=response.usage.output_tokens,
+            cost_usd=cost_usd,
+            quality_score=quality_score,
+        )
+
+        # Update Cache
+        self._cache[cache_key] = result
+
         # Record metrics
         metrics.record_request(
             latency_ms=latency_ms,
@@ -79,14 +115,7 @@ class LabAgent:
             quality_score=quality_score,
         )
 
-        return AgentResult(
-            answer=response.text,
-            latency_ms=latency_ms,
-            tokens_in=response.usage.input_tokens,
-            tokens_out=response.usage.output_tokens,
-            cost_usd=cost_usd,
-            quality_score=quality_score,
-        )
+        return result
 
     def _estimate_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
         return (prompt_tokens * 0.00001) + (completion_tokens * 0.00003)
