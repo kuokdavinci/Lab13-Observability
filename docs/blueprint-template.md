@@ -10,7 +10,7 @@
   - Member B: Trần Khánh Bằng   | Role: Metrics & Dashboards, Alerting & SLOs, Load Testing
   - Member C: Nguyễn Đức Cường | Role: Cost optimization, Script custom 
   - Member D: Trần Thái Thịnh | Role: Load Test & Dashboard
-  - Member E: [Name] | Role: Demo & Report
+  - Member E: Đỗ Hải Nam | Role: Distributed tracing, Log enrichment, Colleration ID (middle ware)
 
 ---
 
@@ -87,6 +87,12 @@ Record : {"service": "api", "payload": {"message_preview": "I need to update my 
 ### Trần Thái Thịnh 
 - [TASKS_COMPLETED]: Thiết kế và triển khai giao diện Gradio Dashboard theo `docs/dashboard-spec.md` (6 tabs: Server Control, Chat Interface, Monitoring Dashboard, Incident Management, Testing & Validation, System Info); tích hợp hiển thị metrics/logs/traces để demo flow Metrics -> Traces -> Logs; xây dựng launcher và luồng vận hành demo end-to-end cho đội.
 - [EVIDENCE_LINK]: gradio_ui.py, launch_dashboard.py, utils/dashboard_helpers.py, GRADIO_UI_GUIDE.md, QUICKSTART.md, docs/dashboard-spec.md
+
+### Đỗ Hải Nam
+TASKS_COMPLETED]: Thiết lập hệ thống Distributed Tracing bằng Langfuse để theo dõi luồng dữ liệu của Agent; triển khai Correlation ID Middleware để đồng bộ mã yêu cầu (x-request-id) xuyên suốt hệ thống; thực hiện Log Enrichment để gắn thêm ngữ cảnh người dùng (user_id_hash, session_id) vào nhật ký hệ thống giúp tăng khả năng quan sát (observability).
+[EVIDENCE_LINK]: 
+
+app/middleware.py, app/tracing.py, app/main.py, app/agent.py
 ---
 
 ## 6. Bonus Items (Optional)
