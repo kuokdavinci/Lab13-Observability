@@ -12,7 +12,7 @@ from structlog.contextvars import bind_contextvars
 from .agent import LabAgent
 from .incidents import disable, enable, status
 from .logging_config import configure_logging, get_logger
-from .metrics import record_error, snapshot
+from .metrics import record_error, record_request, snapshot, get_prometheus_metrics
 from .middleware import CorrelationIdMiddleware
 from .pii import hash_user_id, summarize_text
 from .schemas import ChatRequest, ChatResponse
@@ -41,8 +41,8 @@ async def health() -> dict:
 
 
 @app.get("/metrics")
-async def metrics() -> dict:
-    return snapshot()
+async def metrics() -> str:
+    return get_prometheus_metrics()
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -76,6 +76,13 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             tokens_out=result.tokens_out,
             cost_usd=result.cost_usd,
             payload={"answer_preview": summarize_text(result.answer)},
+        )
+        record_request(
+            latency_ms=result.latency_ms,
+            cost_usd=result.cost_usd,
+            tokens_in=result.tokens_in,
+            tokens_out=result.tokens_out,
+            quality_score=result.quality_score,
         )
         return ChatResponse(
             answer=result.answer,

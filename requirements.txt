@@ -6,3 +6,4 @@ python-dotenv==1.1.0
 httpx==0.28.1
 langfuse==2.57.0
 pytest==8.3.5
+prometheus-client==0.21.1
