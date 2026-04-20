@@ -8,8 +8,8 @@
 - [MEMBERS]:
   - Member A: Lê Trung Anh Quốc | Role: Logging & PII, Tracing & Enrichment
   - Member B: Trần Khánh Bằng   | Role: Metrics & Dashboards, Alerting & SLOs, Load Testing
-  - Member C: Nguyễn Đức Cường | Role: Cost optimization, Script custom
-  - Member D: [Name] | Role: Load Test & Dashboard
+  - Member C: Nguyễn Đức Cường | Role: Cost optimization, Auto-instrument 
+  - Member D: Trần Thái Thịnh | Role: Load Test & Dashboard
   - Member E: [Name] | Role: Demo & Report
 
 ---
@@ -83,6 +83,10 @@ Record : {"service": "api", "payload": {"message_preview": "I need to update my 
 ### Nguyễn Đức Cường
 - [TASKS_COMPLETED]: Triển khai bộ nhớ đệm (Exact-match Cache) để tối ưu chi phí LLM, viết script tự động hóa báo cáo từ log dữ liệu, thiết lập Metric đo lường hiệu quả Cache (Prometheus) và sửa lỗi kiến trúc log để đạt điểm 100/100 validation.
 - [EVIDENCE_LINK]: app/agent.py,app/metrics.py, scripts/auto_report.py,app/main.py
+
+### Trần Thái Thịnh 
+- [TASKS_COMPLETED]: Thiết kế và triển khai giao diện Gradio Dashboard theo `docs/dashboard-spec.md` (6 tabs: Server Control, Chat Interface, Monitoring Dashboard, Incident Management, Testing & Validation, System Info); tích hợp hiển thị metrics/logs/traces để demo flow Metrics -> Traces -> Logs; xây dựng launcher và luồng vận hành demo end-to-end cho đội.
+- [EVIDENCE_LINK]: gradio_ui.py, launch_dashboard.py, utils/dashboard_helpers.py, GRADIO_UI_GUIDE.md, QUICKSTART.md, docs/dashboard-spec.md
 ---
 
 ## 6. Bonus Items (Optional)
