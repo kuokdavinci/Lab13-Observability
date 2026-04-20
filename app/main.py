@@ -85,10 +85,12 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
         log.info(
             "response_sent",
             service="api",
+            status_code=200,
             latency_ms=result.latency_ms,
             tokens_in=result.tokens_in,
             tokens_out=result.tokens_out,
             cost_usd=result.cost_usd,
+            quality_score=result.quality_score, # Track AI Quality in logs
             payload={"answer_preview": summarize_text(result.answer)},
         )
         record_request(

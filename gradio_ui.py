@@ -329,288 +329,143 @@ def validate_logs():
 
 # === GRADIO INTERFACE ===
 
+# === GRADIO INTERFACE ===
+
 def create_gradio_interface():
-    """Create the main Gradio interface"""
+    """Create a high-contrast, professional Gradio interface for Day 13 Lab"""
     
-    with gr.Blocks(
-        title="Day 13 Observability Lab Dashboard",
-        theme=gr.themes.Soft(),
-        css="""
-        .gradio-container {
-            max-width: 1200px !important;
-        }
-        .tab-nav {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        }
-        """
-    ) as demo:
+    # Custom CSS for high contrast and unified theme
+    custom_css = """
+    .gradio-container { max-width: 1400px !important; background-color: #0b0d11 !important; padding: 10px !important; }
+    .main-header { 
+        background: linear-gradient(135deg, #111827 0%, #0b0d11 100%); 
+        padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 0.75rem;
+        border: 1px solid #1f2937; border-left: 5px solid #5d7cb2;
+    }
+    .stat-card { background: #111827; padding: 0.75rem; border-radius: 8px; border: 1px solid #1f2937; height: 100%; }
+    .dashboard-container { background: #0f172a; border-radius: 12px; padding: 0.5rem; border: 1px solid #1e293b; }
+    .console-box { font-family: 'JetBrains Mono', 'Fira Code', monospace; background: #000000 !important; font-size: 0.85rem !important; }
+    .gr-button { border-radius: 6px !important; font-weight: 600 !important; }
+    footer { display: none !important; }
+    .tabs { border: none !important; }
+    .tabitem { border: none !important; padding: 1rem 0 !important; }
+    """
+    
+    with gr.Blocks(title="Observability Core | Day 13", css=custom_css, theme=gr.themes.Base()) as demo:
         
-        gr.HTML("""
-        <div style="text-align: center; padding: 20px; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 20px; border-radius: 10px;">
-            <h1>🔍 Day 13 Observability Lab Dashboard</h1>
-            <p>Comprehensive monitoring, testing, and management interface for the observability system</p>
-        </div>
-        """)
-        
+        with gr.Group(elem_classes="main-header"):
+            with gr.Row():
+                with gr.Column(scale=4):
+                    gr.HTML(f"""
+                        <h1 style='color: #f8fafc; font-size: 2rem; margin: 0; letter-spacing: -0.5px;'>
+                            <span style='color: #5d7cb2;'>OBSERVABILITY</span> <span style='color: #b67b88;'>CORE</span> 
+                            <small style='color: #4b5563; font-size: 0.9rem; font-weight: 400;'>V2.2 LAB</small>
+                        </h1>
+                    """)
+                with gr.Column(scale=1):
+                    with gr.Row():
+                        server_status_light = gr.Markdown("## 🔴 **OFL**")
+                        refresh_status_btn = gr.Button("🔄 RELOAD", size="sm", variant="secondary")
+
         with gr.Tabs() as tabs:
             
-            # === SERVER CONTROL TAB ===
-            with gr.Tab("🖥️ Server Control"):
-                gr.Markdown("## Server Management")
+            # --- TAB 1: EXECUTIVE DASHBOARD ---
+            with gr.Tab("📊 DASHBOARD"):
+                gr.Markdown("#### 💎 Real-time System Telemetry")
+                with gr.Row(variant="compact"):
+                    refresh_db_btn = gr.Button("⚡ REFRESH DASHBOARD", variant="primary", scale=2)
                 
-                with gr.Row():
-                    with gr.Column():
-                        start_btn = gr.Button("🚀 Start Server", variant="primary")
-                        stop_btn = gr.Button("🛑 Stop Server", variant="stop")
-                        status_btn = gr.Button("📊 Check Status", variant="secondary")
+                with gr.Group(elem_classes="dashboard-container"):
+                    main_plot = gr.Plot(show_label=False)
                 
-                server_output = gr.Textbox(
-                    label="Server Status", 
-                    lines=3, 
-                    interactive=False
-                )
-                
-                # Auto-refresh status every 10 seconds
-                status_btn.click(
-                    fn=check_server_status,
-                    outputs=server_output,
-                    every=10
-                )
-                
-                start_btn.click(
-                    fn=start_fastapi_server,
-                    outputs=server_output
-                )
-                
-                stop_btn.click(
-                    fn=stop_fastapi_server,
-                    outputs=server_output
-                )
+                with gr.Accordion("📜 Activity Stream (Logs)", open=False):
+                    logs_summary = gr.Markdown()
             
-            # === CHAT INTERFACE TAB ===
-            with gr.Tab("💬 Chat Interface"):
-                gr.Markdown("## Test the Chat Agent")
-                gr.Markdown("Send messages to test the observability instrumentation")
-                
+            # --- TAB 2: OPERATOR CONSOLE ---
+            with gr.Tab("🛠️ OPERATOR CONSOLE"):
                 with gr.Row():
-                    with gr.Column(scale=1):
-                        user_id = gr.Textbox(
-                            label="User ID",
-                            value="test_user_01",
-                            placeholder="Enter user ID"
-                        )
-                        session_id = gr.Textbox(
-                            label="Session ID",
-                            value="session_01",
-                            placeholder="Enter session ID"
-                        )
-                        feature = gr.Dropdown(
-                            label="Feature",
-                            choices=["qa", "summary", "analysis"],
-                            value="qa"
-                        )
-                    
-                    with gr.Column(scale=2):
-                        message = gr.Textbox(
-                            label="Message",
-                            placeholder="Enter your message here...",
-                            lines=3
-                        )
-                        send_btn = gr.Button("📤 Send Message", variant="primary")
-                
-                with gr.Row():
-                    with gr.Column():
-                        response = gr.Textbox(
-                            label="Agent Response",
-                            lines=5,
-                            interactive=False
-                        )
-                    
-                    with gr.Column():
-                        response_details = gr.Markdown(label="Response Details")
-                        metrics_info = gr.Markdown(label="Metrics")
-                
-                send_btn.click(
-                    fn=send_chat_message,
-                    inputs=[user_id, session_id, feature, message],
-                    outputs=[response, response_details, metrics_info]
-                )
-            
-            # === MONITORING DASHBOARD TAB ===
-            with gr.Tab("📈 Monitoring Dashboard"):
-                gr.Markdown("## System Metrics & Observability")
-                
-                with gr.Row():
-                    refresh_dashboard = gr.Button("🔄 Refresh Dashboard", variant="secondary")
-                
-                dashboard_plot = gr.Plot(label="Metrics Dashboard")
-                
-                with gr.Row():
-                    with gr.Column():
-                        logs_summary = gr.Markdown(label="Recent Logs")
-                    
-                    with gr.Column():
-                        system_metrics = gr.JSON(label="System Resources")
-                
-                def refresh_all_dashboard():
-                    return (
-                        create_metrics_dashboard(),
-                        get_logs_summary(),
-                        get_system_metrics()
-                    )
-                
-                refresh_dashboard.click(
-                    fn=refresh_all_dashboard,
-                    outputs=[dashboard_plot, logs_summary, system_metrics]
-                )
-                
-                # Auto-refresh every 30 seconds
-                demo.load(
-                    fn=refresh_all_dashboard,
-                    outputs=[dashboard_plot, logs_summary, system_metrics],
-                    every=30
-                )
-            
-            # === INCIDENT MANAGEMENT TAB ===
-            with gr.Tab("🚨 Incident Management"):
-                gr.Markdown("## Incident Simulation & Management")
-                
-                with gr.Row():
-                    get_status_btn = gr.Button("📋 Get Status", variant="secondary")
-                    incident_status_output = gr.Markdown(label="Incident Status")
-                
-                with gr.Row():
-                    with gr.Column():
-                        incident_name = gr.Dropdown(
-                            label="Incident Type",
+                    with gr.Column(scale=1, elem_classes="stat-card"):
+                        gr.Markdown("### ⚙️ SERVICE CONTROL")
+                        with gr.Row():
+                            start_btn = gr.Button("🚀 BOOT", variant="primary")
+                            stop_btn = gr.Button("🛑 HALT", variant="stop")
+                        
+                        gr.Markdown("---")
+                        gr.Markdown("### 🚨 INCIDENT ENGINE")
+                        target_incident = gr.Dropdown(
+                            label="Select Anomaly Profile",
                             choices=["rag_slow", "llm_error", "memory_leak", "db_connection"],
                             value="rag_slow"
                         )
-                        
                         with gr.Row():
-                            enable_incident = gr.Button("🔴 Enable Incident", variant="stop")
-                            disable_incident = gr.Button("🟢 Disable Incident", variant="primary")
-                    
-                    with gr.Column():
-                        incident_output = gr.Textbox(
-                            label="Incident Management Output",
-                            lines=5,
-                            interactive=False
-                        )
+                            trigger_btn = gr.Button("🔴 INJECT", variant="stop")
+                            recover_btn = gr.Button("🟢 RECOVER", variant="primary")
+                            
+                    with gr.Column(scale=2, elem_classes="stat-card"):
+                        gr.Markdown("### 🧪 STRESS & VALIDATION")
+                        with gr.Row():
+                            load_concurrency = gr.Slider(1, 20, 5, label="Concurrent Workers", step=1)
+                            stress_requests = gr.Slider(1, 100, 20, label="Burst Count", step=1)
+                        with gr.Row():
+                            run_stress_btn = gr.Button("🔥 RUN STRESS TEST", variant="secondary")
+                            validate_sys_btn = gr.Button("✅ VALIDATE SCHEMA", variant="secondary")
                 
-                async def enable_incident_wrapper(name):
-                    return await toggle_incident(name, True)
-                
-                async def disable_incident_wrapper(name):
-                    return await toggle_incident(name, False)
-                
-                get_status_btn.click(
-                    fn=get_incident_status,
-                    outputs=incident_status_output
-                )
-                
-                enable_incident.click(
-                    fn=enable_incident_wrapper,
-                    inputs=incident_name,
-                    outputs=incident_output
-                )
-                
-                disable_incident.click(
-                    fn=disable_incident_wrapper,
-                    inputs=incident_name,
-                    outputs=incident_output
-                )
-            
-            # === TESTING & VALIDATION TAB ===
-            with gr.Tab("🧪 Testing & Validation"):
-                gr.Markdown("## Load Testing & Log Validation")
+                gr.Markdown("### 🖥️ SYSTEM CONSOLE")
+                console_log = gr.Textbox(show_label=False, lines=8, interactive=False, elem_classes="console-box")
+
+            # --- TAB 3: AGENT SANDBOX ---
+            with gr.Tab("💬 AGENT SANDBOX"):
+                gr.Markdown("### 🧠 Live LLM Interaction & Tracing")
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        chat_user = gr.Textbox(label="Actor ID", value="operator_01")
+                        chat_feature = gr.Dropdown(label="Context Path", choices=["qa", "summary", "analysis"], value="qa")
+                        chat_session = gr.Textbox(label="Observation ID", value=f"obs_{int(time.time())}")
+                    with gr.Column(scale=3):
+                        chat_input = gr.Textbox(label="Inference Payload", placeholder="Test system observability...", lines=2)
+                        send_chat_btn = gr.Button("🚀 RUN OBSERVATION", variant="primary")
                 
                 with gr.Row():
-                    with gr.Column():
-                        gr.Markdown("### Load Testing")
-                        concurrency = gr.Slider(
-                            label="Concurrency",
-                            minimum=1,
-                            maximum=20,
-                            value=5,
-                            step=1
-                        )
-                        requests_count = gr.Slider(
-                            label="Number of Requests",
-                            minimum=1,
-                            maximum=100,
-                            value=20,
-                            step=1
-                        )
-                        run_load_btn = gr.Button("🚀 Run Load Test", variant="primary")
-                    
-                    with gr.Column():
-                        gr.Markdown("### Log Validation")
-                        validate_btn = gr.Button("✅ Validate Logs", variant="secondary")
-                
-                with gr.Row():
-                    test_output = gr.Textbox(
-                        label="Test Results",
-                        lines=15,
-                        interactive=False
-                    )
-                
-                run_load_btn.click(
-                    fn=run_load_test,
-                    inputs=[concurrency, requests_count],
-                    outputs=test_output
-                )
-                
-                validate_btn.click(
-                    fn=validate_logs,
-                    outputs=test_output
-                )
-            
-            # === SYSTEM INFO TAB ===
-            with gr.Tab("ℹ️ System Info"):
-                gr.Markdown("## Lab Information & Setup")
-                
-                gr.Markdown(f"""
-                ### Lab Environment
-                - **API Server**: {API_BASE_URL}
-                - **Langfuse UI**: {LANGFUSE_URL}  
-                - **Working Directory**: {os.getcwd()}
-                
-                ### Key Features Monitored
-                1. **Structured Logging** - JSON schema with correlation IDs
-                2. **Distributed Tracing** - Langfuse integration
-                3. **PII Scrubbing** - Automatic data sanitization
-                4. **Metrics Collection** - Latency, cost, quality scores
-                5. **Incident Simulation** - Controlled failure injection
-                6. **SLO Monitoring** - Service level objectives
-                
-                ### Rubric Requirements Covered
-                - ✅ **Logging & Tracing**: JSON schema, correlation IDs, 10+ traces
-                - ✅ **Dashboard & SLO**: 6-panel dashboard with thresholds
-                - ✅ **Alerts & PII**: PII redaction, alert rules with runbook
-                - ✅ **Incident Response**: Root cause analysis capabilities
-                - ✅ **Live Demo**: Full system demonstration
-                
-                ### Quick Start Commands
-                ```bash
-                # Start the system
-                python gradio_ui.py
-                
-                # In another terminal, start FastAPI
-                uvicorn app.main:app --reload
-                
-                # Start Langfuse (if using Docker)
-                docker-compose up -d
-                ```
-                
-                ### Testing the System
-                1. Start the FastAPI server from the Server Control tab
-                2. Send test messages via the Chat Interface
-                3. Monitor metrics in the Dashboard
-                4. Simulate incidents for testing
-                5. Validate logs and run load tests
-                """)
-    
+                    with gr.Column(scale=2):
+                        gr.Markdown("#### 🤖 Agent Response")
+                        chat_output = gr.Textbox(show_label=False, lines=6, interactive=False)
+                    with gr.Column(scale=1):
+                        gr.Markdown("#### 🧬 Trace Analysis")
+                        trace_meta = gr.Markdown()
+                        metric_card = gr.Markdown()
+
+        # --- EVENT LOGIC ---
+        
+        def refresh_all():
+            db_builder = DashboardBuilder()
+            log_analyzer = LogAnalyzer()
+            return (
+                db_builder.create_main_dashboard(),
+                format_metrics_summary(log_analyzer.get_metrics_summary()),
+                check_server_status()
+            )
+
+        refresh_db_btn.click(refresh_all, outputs=[main_plot, logs_summary, server_status_light])
+        refresh_status_btn.click(check_server_status, outputs=server_status_light)
+        
+        start_btn.click(start_fastapi_server, outputs=console_log)
+        stop_btn.click(stop_fastapi_server, outputs=console_log)
+        
+        trigger_btn.click(lambda n: toggle_incident(n, True), inputs=target_incident, outputs=console_log)
+        recover_btn.click(lambda n: toggle_incident(n, False), inputs=target_incident, outputs=console_log)
+        
+        run_stress_btn.click(run_load_test, inputs=[load_concurrency, stress_requests], outputs=console_log)
+        validate_sys_btn.click(validate_logs, outputs=console_log)
+        
+        send_chat_btn.click(
+            send_chat_message, 
+            inputs=[chat_user, chat_session, chat_feature, chat_input],
+            outputs=[chat_output, trace_meta, metric_card]
+        )
+        
+        # Initial load
+        demo.load(refresh_all, outputs=[main_plot, logs_summary, server_status_light])
+
     return demo
 
 # === MAIN EXECUTION ===

@@ -54,6 +54,8 @@ class LogAnalyzer:
         
         return logs
     
+
+
     def get_metrics_summary(self) -> Dict[str, Any]:
         """Get summary metrics from logs"""
         logs = self.load_logs()
@@ -63,21 +65,30 @@ class LogAnalyzer:
                 "total_requests": 0,
                 "avg_latency": 0,
                 "total_cost": 0,
-                "error_rate": 0,
+                "success_rate": 0,
                 "avg_quality": 0
             }
         
         df = pd.DataFrame(logs)
         
-        # Filter request logs
-        request_logs = df[df.get('event') == 'response_sent']
+        # Filter requests - Only count terminal events
+        success_logs = df[df.get('event') == 'response_sent']
+        failed_logs = df[df.get('event') == 'request_failed']
         
+        # total_attempts should only be the sum of completions and failures
+        total_attempts = len(success_logs) + len(failed_logs)
+        
+        # Safe column access (using success_logs)
+        def get_stat(col):
+            return success_logs[col] if col in success_logs.columns and len(success_logs) > 0 else pd.Series()
+
         summary = {
-            "total_requests": len(request_logs),
-            "avg_latency": request_logs['latency_ms'].mean() if 'latency_ms' in request_logs.columns else 0,
-            "total_cost": request_logs['cost_usd'].sum() if 'cost_usd' in request_logs.columns else 0,
-            "error_rate": len(df[df.get('level') == 'error']) / max(len(df), 1) * 100,
-            "avg_quality": request_logs['quality_score'].mean() if 'quality_score' in request_logs.columns else 0
+            "total_requests": total_attempts,
+            "avg_latency": get_stat('latency_ms').mean() if not get_stat('latency_ms').empty else 0,
+            "p95_latency": get_stat('latency_ms').quantile(0.95) if not get_stat('latency_ms').empty else 0,
+            "total_cost": get_stat('cost_usd').sum() if not get_stat('cost_usd').empty else 0,
+            "success_rate": (len(success_logs) / total_attempts * 100) if total_attempts > 0 else 0,
+            "avg_quality": get_stat('quality_score').mean() if not get_stat('quality_score').empty else 0
         }
         
         return summary
@@ -159,148 +170,178 @@ class DashboardBuilder:
     def __init__(self):
         self.analyzer = LogAnalyzer()
     
+    def format_metrics_summary(self) -> str:
+        """Get summary string for metrics card"""
+        stats = self.analyzer.get_metrics_summary()
+        return (
+            f"### 📊 Session Summary\n"
+            f"**Traffic**: {stats['total_requests']} reqs\n"
+            f"**P95 Latency**: {stats['avg_latency']:.1f}ms\n"
+            f"**Success Rate**: {stats['success_rate']:.1f}%\n"
+            f"**Budget Used**: ${stats['total_cost']:.4f}\n"
+            f"**Avg AI Quality**: {stats['avg_quality']:.2f}"
+        )
+    
     def create_main_dashboard(self) -> go.Figure:
-        """Create the main 6-panel dashboard"""
+        """Professional SRE Dashboard with Time-series Trend Analysis"""
         logs = self.analyzer.load_logs()
+        
+        # Color Palette - Blue/Pink Elite
+        P_BLUE = "#5d7cb2"
+        P_PINK = "#b67b88"
+        P_GRAY = "#475569"
         
         if not logs:
             fig = go.Figure()
-            fig.add_annotation(
-                text="No data available. Start the server and make some requests.",
-                xref="paper", yref="paper",
-                x=0.5, y=0.5,
-                showarrow=False,
-                font=dict(size=16)
-            )
+            fig.add_annotation(text="WAITING FOR TELEMETRY DATA...", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False, font=dict(size=14, color=P_GRAY))
+            fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
             return fig
         
         df = pd.DataFrame(logs)
+        df['ts_dt'] = pd.to_datetime(df['ts']) if 'ts' in df.columns else None
+        resp_df = df[df.get('event') == 'response_sent'].copy() if 'event' in df.columns else df.copy()
         
-        # Create subplots
+        # Create subplots with specific types for Indicators
         fig = make_subplots(
             rows=3, cols=2,
-            subplot_titles=[
-                'Request Latency Over Time',
-                'Response Quality Distribution', 
-                'Token Usage Analysis',
-                'Cost per Request',
-                'Error Rate by Service',
-                'Request Volume Timeline'
-            ],
             specs=[
-                [{"secondary_y": True}, {"type": "histogram"}],
-                [{"secondary_y": False}, {"type": "scatter"}],
-                [{"type": "bar"}, {"secondary_y": True}]
-            ]
+                [{"type": "xy"}, {"type": "domain"}],      # Traffic, Availability
+                [{"type": "xy"}, {"type": "domain"}],      # Latency, Quality (Number Only)
+                [{"type": "xy"}, {"type": "xy"}]           # Cost, Errors
+            ],
+            subplot_titles=(
+                "LLM Traffic (Throughput)", "Availability % (SLA 95%)",
+                "P95 Latency (ms) - Response Tail", "AI Quality (AVG Score)",
+                "Total Cost Burn ($)", "Error Breakdown (by Type)"
+            ),
+            vertical_spacing=0.12,
+            horizontal_spacing=0.08
         )
         
-        # Panel 1: Request Latency
-        if 'latency_ms' in df.columns and 'ts' in df.columns:
-            latency_data = df.dropna(subset=['latency_ms'])
-            if not latency_data.empty:
-                fig.add_trace(
-                    go.Scatter(
-                        x=latency_data['ts'],
-                        y=latency_data['latency_ms'],
-                        mode='lines+markers',
-                        name='Latency (ms)',
-                        line=dict(color='blue')
-                    ),
-                    row=1, col=1
-                )
+        # Filter relevant logs
+        success_df = df[df.get('event') == 'response_sent'].copy() if 'event' in df.columns else pd.DataFrame()
         
-        # Panel 2: Quality Distribution
-        if 'quality_score' in df.columns:
-            quality_data = df.dropna(subset=['quality_score'])
-            if not quality_data.empty:
-                fig.add_trace(
-                    go.Histogram(
-                        x=quality_data['quality_score'],
-                        name='Quality Score',
-                        nbinsx=20,
-                        marker_color='green'
-                    ),
-                    row=1, col=2
-                )
-        
-        # Panel 3: Token Usage
-        if 'tokens_in' in df.columns and 'tokens_out' in df.columns:
-            token_data = df.dropna(subset=['tokens_in', 'tokens_out'])
-            if not token_data.empty:
-                fig.add_trace(
-                    go.Scatter(
-                        x=list(range(len(token_data))),
-                        y=token_data['tokens_in'],
-                        mode='markers',
-                        name='Input Tokens',
-                        marker=dict(color='orange')
-                    ),
-                    row=2, col=1
-                )
-                fig.add_trace(
-                    go.Scatter(
-                        x=list(range(len(token_data))),
-                        y=token_data['tokens_out'], 
-                        mode='markers',
-                        name='Output Tokens',
-                        marker=dict(color='red')
-                    ),
-                    row=2, col=1
-                )
-        
-        # Panel 4: Cost Analysis
-        if 'cost_usd' in df.columns and 'ts' in df.columns:
-            cost_data = df.dropna(subset=['cost_usd'])
-            if not cost_data.empty:
-                fig.add_trace(
-                    go.Scatter(
-                        x=cost_data['ts'],
-                        y=cost_data['cost_usd'],
-                        mode='markers',
-                        name='Cost per Request',
-                        marker=dict(color='purple', size=8)
-                    ),
-                    row=2, col=2
-                )
-        
-        # Panel 5: Error Rate by Service
-        if 'service' in df.columns and 'level' in df.columns:
-            error_df = df[df['level'] == 'error']
-            if not error_df.empty:
-                error_by_service = error_df['service'].value_counts()
-                fig.add_trace(
-                    go.Bar(
-                        x=error_by_service.index,
-                        y=error_by_service.values,
-                        name='Error Count',
-                        marker_color='red'
-                    ),
-                    row=3, col=1
-                )
-        
-        # Panel 6: Request Volume
-        if 'ts' in df.columns:
-            df['timestamp'] = pd.to_datetime(df['ts'])
-            hourly_requests = df.set_index('timestamp').resample('1H').size()
-            if not hourly_requests.empty:
-                fig.add_trace(
-                    go.Scatter(
-                        x=hourly_requests.index,
-                        y=hourly_requests.values,
-                        mode='lines+markers',
-                        name='Requests/Hour',
-                        line=dict(color='darkblue')
-                    ),
-                    row=3, col=2
-                )
-        
-        # Update layout
+        # 1. Traffic (Throughput) - 5s resolution
+        if not success_df.empty:
+            traffic = success_df.set_index('ts_dt').resample('5s').size()
+            fig.add_trace(go.Scatter(x=traffic.index, y=traffic.values, fill='tozeroy', name='Throughput', line=dict(color=P_BLUE, width=2)), row=1, col=1)
+
+        # 2. Availability (Average Success Rate) - Big Indicator
+        if not df.empty:
+            # Only consider terminal events for availability
+            terminal_df = df[df['event'].isin(['response_sent', 'request_failed'])].copy()
+            if not terminal_df.empty:
+                terminal_df['is_success'] = (terminal_df['event'] == 'response_sent').astype(int)
+                total_avail = terminal_df['is_success'].mean() * 100
+            else:
+                total_avail = 0
+            
+            fig.add_trace(go.Indicator(
+                mode = "gauge+number",
+                value = total_avail,
+                number = {'suffix': "%", 'font': {'color': P_BLUE, 'size': 45}},
+                gauge = {
+                    'axis': {'range': [0, 100]},
+                    'bar': {'color': P_BLUE},
+                    'steps': [
+                        {'range': [0, 95], 'color': "red"},
+                        {'range': [95, 99], 'color': "orange"},
+                        {'range': [99, 100], 'color': "green"}
+                    ],
+                    'threshold': {
+                        'line': {'color': "white", 'width': 4},
+                        'thickness': 0.75,
+                        'value': 95.0
+                    }
+                },
+                title = {'text': "AVAILABILITY % (SLA 95%)", 'font': {'size': 14}}
+            ), row=1, col=2)
+            
+            # Hide axes for indicator cell to avoid overlap/garbage numbers
+            fig.update_xaxes(visible=False, row=1, col=2)
+            fig.update_yaxes(visible=False, row=1, col=2)
+        else:
+            fig.add_annotation(text="WAITING FOR DATA", row=1, col=2, showarrow=False)
+
+        # 3. Latency (P95 Trend) - 5s resolution
+        if not success_df.empty and 'latency_ms' in success_df.columns:
+            lat_trend = success_df.set_index('ts_dt')['latency_ms'].resample('5s').quantile(0.95).fillna(0)
+            threshold_ms = 1000 # 1 second as per alert rules
+            
+            fig.add_trace(go.Scatter(x=lat_trend.index, y=lat_trend.values, name='P95', line=dict(color=P_PINK, width=2)), row=2, col=1)
+            
+            # SLO Line at 1000ms
+            fig.add_shape(type="line", x0=lat_trend.index.min(), x1=lat_trend.index.max(), y0=threshold_ms, y1=threshold_ms, 
+                          line=dict(color="red", width=2, dash="dot"), row=2, col=1)
+            
+            # Fix Y-axis for high resolution (Clean look)
+            current_p95 = lat_trend.max()
+            fig.update_yaxes(
+                range=[0, max(current_p95 * 1.5, 50)], 
+                nticks=5, # Fewer marks for cleaner look
+                row=2, col=1
+            )
+            
+            fig.add_annotation(
+                text=f"SLO: {threshold_ms}ms",
+                xref="x3", yref="y3", x=lat_trend.index.min(), y=threshold_ms,
+                showarrow=False, yshift=10, font=dict(color="red", size=10)
+            )
+
+        # 4. AI Quality Score - Big Number Only (No Plot)
+        if not success_df.empty and 'quality_score' in success_df.columns:
+            avg_qual = success_df['quality_score'].mean()
+            
+            fig.add_trace(go.Indicator(
+                mode = "number",
+                value = avg_qual,
+                number = {'font': {'size': 60, 'color': P_PINK}, 'valueformat': ".2f"},
+                domain = {'row': 1, 'column': 1}
+            ), row=2, col=2)
+        else:
+            fig.add_annotation(text="WAITING FOR SCORE", row=2, col=2, showarrow=False)
+
+        # 5. Cost Burn (Cumulative)
+        if not success_df.empty and 'cost_usd' in success_df.columns:
+            cost_series = success_df.sort_values('ts_dt').set_index('ts_dt')['cost_usd'].cumsum()
+            
+            fig.add_trace(go.Scatter(
+                x=cost_series.index, y=cost_series.values, 
+                fill='tozeroy', name='Cost', 
+                line=dict(color=P_BLUE, width=3)
+            ), row=3, col=1)
+            
+            # Auto-scale Y axis for micro-costs to make it "visible"
+            current_max = cost_series.max()
+            fig.update_yaxes(range=[0, max(current_max * 1.5, 0.001)], row=3, col=1)
+            
+            fig.add_annotation(
+                text=f"Total: ${current_max:.6f}",
+                xref="x5", yref="y5", x=cost_series.index.min(), y=current_max,
+                showarrow=False, yshift=15, font=dict(color=P_BLUE, size=11)
+            )
+
+        # 6. Error Breakdown
+        error_df = df[df.get('level') == 'error']
+        if not error_df.empty and 'error_type' in error_df.columns:
+            err_counts = error_df['error_type'].value_counts()
+            fig.add_trace(go.Bar(x=err_counts.index, y=err_counts.values, name='Errors', marker_color=P_PINK), row=3, col=2)
+        else:
+            fig.add_annotation(text="NO ERRORS REPORTED", row=3, col=2, showarrow=False, font=dict(color="green"))
+
         fig.update_layout(
-            height=900,
-            title_text="Day 13 Observability Dashboard - Key Metrics",
-            showlegend=True
+            height=900, template="plotly_dark",
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(15,23,42,0.5)',
+            font=dict(family="Inter, sans-serif", size=13),
+            margin=dict(t=120, b=50, l=60, r=40), # Increased top margin to prevent title cutoff
+            showlegend=False,
+            title=dict(text="SYSTEM OBSERVABILITY CORE TELEMETRY", x=0.5, y=0.98, font=dict(size=20, color=P_BLUE))
         )
-        
+        # Ensure subplot titles are visible
+        for i in fig['layout']['annotations']:
+            i['font'] = dict(size=14, color="white", family="Inter, sans-serif")
+            
         return fig
     
     def create_real_time_chart(self, metric: str = 'latency_ms') -> go.Figure:
@@ -377,12 +418,12 @@ class AlertsManager:
                 "severity": "warning"
             })
         
-        # Check error rate alert
-        if metrics['error_rate'] > self.alert_rules['error_rate_high']['threshold']:
+        # Check success rate alert (SLA 95%)
+        if metrics['success_rate'] < 95.0:
             alerts.append({
-                "name": "High Error Rate",
-                "value": metrics['error_rate'],
-                "threshold": self.alert_rules['error_rate_high']['threshold'],
+                "name": "SLA Breach (Success Rate)",
+                "value": metrics['success_rate'],
+                "threshold": 95.0,
                 "severity": "critical"
             })
         
@@ -421,12 +462,13 @@ def format_metrics_summary(metrics: Dict[str, Any]) -> str:
     return f"""
 ## 📊 Metrics Summary
 
-- **Total Requests**: {metrics['total_requests']}
-- **Average Latency**: {metrics['avg_latency']:.2f}ms
+- **Total Requests (Terminal)**: {metrics['total_requests']}
+- **P95 Latency**: {metrics['p95_latency']:.2f}ms
 - **Total Cost**: ${metrics['total_cost']:.6f}
-- **Error Rate**: {metrics['error_rate']:.2f}%
-- **Average Quality**: {metrics['avg_quality']:.2f}/1.0
+- **Success Rate**: {metrics['success_rate']:.2f}%
+- **Avg Quality**: {metrics['avg_quality']:.2f}/1.0
 
+*Note: Data derived from {metrics['total_requests']} completed operations.*
 *Updated: {datetime.now().strftime('%H:%M:%S')}*
 """
 

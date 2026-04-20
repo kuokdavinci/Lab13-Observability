@@ -51,20 +51,37 @@ class LabAgent:
     def run(self, user_id: str, feature: str, session_id: str, message: str) -> AgentResult:
         started = time.perf_counter()
         
-        # 0. Check Cache (Cost Optimization Bonus)
+        # 1. Cập nhật Trace Metadata NGAY LẬP TỨC (Dù là cache hit hay không)
+        langfuse_context.update_current_trace(
+            user_id=hash_user_id(user_id),
+            session_id=session_id,
+            metadata={"feature": feature, "env": os.getenv("APP_ENV", "dev")},
+            tags=["lab-13-local"]
+        )
+        
+        # 2. Check Cache (Cost Optimization Bonus)
         cache_key = f"{feature}:{message.strip().lower()}"
         if cache_key in self._cache:
             result = self._cache[cache_key]
-            # Record hit but with new latency
             latency_ms = int((time.perf_counter() - started) * 1000)
+            
+            # Record locally
             metrics.record_cache_hit()
             metrics.record_request(
                 latency_ms=latency_ms,
-                cost_usd=0.0, # Zero cost for cache hit!
+                cost_usd=0.0,
                 tokens_in=0,
                 tokens_out=0,
                 quality_score=result.quality_score,
             )
+            
+            # Record Score to Langfuse for Cache Hit
+            langfuse_context.score_current_trace(
+                name="quality-score",
+                value=result.quality_score,
+                comment="Cache Hit Score"
+            )
+            
             return AgentResult(
                 answer=result.answer + " (Cached)",
                 latency_ms=latency_ms,
@@ -74,22 +91,14 @@ class LabAgent:
                 quality_score=result.quality_score,
             )
 
-        # 1. Cập nhật Trace Metadata
-        langfuse_context.update_current_trace(
-            user_id=hash_user_id(user_id),
-            session_id=session_id,
-            metadata={"feature": feature, "env": os.getenv("APP_ENV", "dev")},
-            tags=["lab-13-local"]
-        )
-
-        # 2. Bước Retrieval (Tự động tạo Span con)
+        # 3. Bước Retrieval (Tự động tạo Span con)
         docs = instrumented_retrieve(message)
         
-        # 3. Bước Generation (Tự động tạo Generation con)
+        # 4. Bước Generation (Tự động tạo Generation con)
         prompt = f"Feature={feature}\nDocs={docs}\nQuestion={message}"
         response = instrumented_generate(self.llm, prompt)
 
-        # 4. Final Calculation
+        # 5. Final Calculation
         quality_score = self._heuristic_quality(message, response.text, docs)
         latency_ms = int((time.perf_counter() - started) * 1000)
         cost_usd = self._estimate_cost(response.usage.input_tokens, response.usage.output_tokens)
@@ -106,13 +115,20 @@ class LabAgent:
         # Update Cache
         self._cache[cache_key] = result
 
-        # Record metrics
+        # Record metrics locally
         metrics.record_request(
             latency_ms=latency_ms,
             cost_usd=cost_usd,
             tokens_in=response.usage.input_tokens,
             tokens_out=response.usage.output_tokens,
             quality_score=quality_score,
+        )
+        
+        # Send Score to Langfuse
+        langfuse_context.score_current_trace(
+            name="quality-score",
+            value=quality_score,
+            comment="Heuristic quality check (Lab 13)"
         )
 
         return result

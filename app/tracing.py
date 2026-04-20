@@ -15,6 +15,9 @@ except Exception:  # pragma: no cover
 
         def update_current_observation(self, **kwargs: Any) -> None:
             return None
+            
+        def score_current_trace(self, **kwargs: Any) -> None:
+            return None
 
     langfuse_context = _DummyContext()
 
