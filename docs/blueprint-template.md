@@ -89,10 +89,8 @@ Record : {"service": "api", "payload": {"message_preview": "I need to update my 
 - [EVIDENCE_LINK]: gradio_ui.py, launch_dashboard.py, utils/dashboard_helpers.py, GRADIO_UI_GUIDE.md, QUICKSTART.md, docs/dashboard-spec.md
 
 ### Đỗ Hải Nam
-TASKS_COMPLETED]: Thiết lập hệ thống Distributed Tracing bằng Langfuse để theo dõi luồng dữ liệu của Agent; triển khai Correlation ID Middleware để đồng bộ mã yêu cầu (x-request-id) xuyên suốt hệ thống; thực hiện Log Enrichment để gắn thêm ngữ cảnh người dùng (user_id_hash, session_id) vào nhật ký hệ thống giúp tăng khả năng quan sát (observability).
-[EVIDENCE_LINK]: 
-
-app/middleware.py, app/tracing.py, app/main.py, app/agent.py
+- [TASKS_COMPLETED]: Thiết lập hệ thống Distributed Tracing bằng Langfuse để theo dõi luồng dữ liệu của Agent; triển khai Correlation ID Middleware để đồng bộ mã yêu cầu (x-request-id) xuyên suốt hệ thống; thực hiện Log Enrichment để gắn thêm ngữ cảnh người dùng (user_id_hash, session_id) vào nhật ký hệ thống giúp tăng khả năng quan sát (observability).
+- [EVIDENCE_LINK]: app/middleware.py, app/tracing.py, app/main.py, app/agent.py
 ---
 
 ## 6. Bonus Items (Optional)
