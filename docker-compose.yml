@@ -1,0 +1,42 @@
+services:
+  langfuse-db:
+    image: postgres:15
+    container_name: langfuse-db
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: langfuse
+    ports:
+      - "5432:5432"
+    volumes:
+      - langfuse-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - langfuse-network
+
+  langfuse:
+    image: ghcr.io/langfuse/langfuse:2
+    container_name: langfuse
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@langfuse-db:5432/langfuse"
+      NEXTAUTH_SECRET: "supersecret-change-me-in-production"
+      NEXTAUTH_URL: "http://localhost:3000"
+      SALT: "saltsaltsalt"
+    ports:
+      - "3000:3000"
+    networks:
+      - langfuse-network
+
+volumes:
+  langfuse-db-data:
+    driver: local
+
+networks:
+  langfuse-network:
+    driver: bridge
