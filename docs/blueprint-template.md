@@ -15,7 +15,7 @@
 
 ## 2. Group Performance (Auto-Verified)
 - [VALIDATE_LOGS_FINAL_SCORE]: 100/100
-- [TOTAL_TRACES_COUNT]: 22+ (verified via load test)
+- [TOTAL_TRACES_COUNT]: 22+
 - [PII_LEAKS_FOUND]: 0 (Post-masking implementation)
 
 ---
@@ -66,6 +66,6 @@ Record : {"service": "api", "payload": {"message_preview": "I need to update my 
 ---
 
 ## 6. Bonus Items (Optional)
-- [BONUS_COST_OPTIMIZATION]: Dynamic token tracking and cost-based alerting logic in config/alert_rules.yaml.
+- [BONUS_COST_OPTIMIZATION]: Đã triển khai Exact Match Caching. Phát hiện 22 yêu cầu lặp lại được phục vụ từ cache với Chi phí = 0$, tiết kiệm tài nguyên LLM.
 - [BONUS_AUDIT_LOGS]: Separated Audit Logs located in `data/audit.jsonl` tracking immutable control events (incident_enabled/disabled) and user sessions.
 - [BONUS_CUSTOM_METRIC]: Implementation of `quality_score_avg` with associated P3 degradation alert.
