@@ -81,11 +81,8 @@ Record : {"service": "api", "payload": {"message_preview": "I need to update my 
 - [EVIDENCE_LINK]: app/agent.py, config/alert_rules.yaml, docs/dashboard-spec.md
 
 ### Nguyễn Đức Cường
-[TASKS_COMPLETED]: Triển khai bộ nhớ đệm (Exact-match Cache) để tối ưu chi phí LLM, viết script tự động hóa báo cáo từ log dữ liệu, thiết lập Metric đo lường hiệu quả Cache (Prometheus) và sửa lỗi kiến trúc log để đạt điểm 100/100 validation.
-
-[EVIDENCE_LINK]: 
-
-app/agent.py,app/metrics.py, scripts/auto_report.py,app/main.py
+- [TASKS_COMPLETED]: Triển khai bộ nhớ đệm (Exact-match Cache) để tối ưu chi phí LLM, viết script tự động hóa báo cáo từ log dữ liệu, thiết lập Metric đo lường hiệu quả Cache (Prometheus) và sửa lỗi kiến trúc log để đạt điểm 100/100 validation.
+- [EVIDENCE_LINK]: app/agent.py,app/metrics.py, scripts/auto_report.py,app/main.py
 ---
 
 ## 6. Bonus Items (Optional)
