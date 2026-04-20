@@ -86,6 +86,7 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
         log.info(
             "response_sent",
             service="api",
+            status_code=200,
             latency_ms=result.latency_ms,
             tokens_in=result.tokens_in,
             tokens_out=result.tokens_out,
