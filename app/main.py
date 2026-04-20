@@ -17,6 +17,7 @@ from .middleware import CorrelationIdMiddleware
 from .pii import hash_user_id, summarize_text
 from .schemas import ChatRequest, ChatResponse
 from .tracing import tracing_enabled
+from .audit import audit_log
 
 configure_logging()
 log = get_logger()
@@ -61,6 +62,12 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
         feature=body.feature,
         model=os.getenv("LLM_MODEL", "mock-gpt-4o"),
         env=os.getenv("APP_ENV", "dev"),
+    )
+    
+    audit_log(
+        event="chat_started",
+        actor=body.user_id,
+        payload={"session_id": body.session_id, "feature": body.feature}
     )
     
     log.info(
@@ -117,6 +124,7 @@ async def enable_incident(name: str) -> JSONResponse:
     try:
         enable(name)
         log.warning("incident_enabled", service="control", payload={"name": name})
+        audit_log(event="incident_enabled", actor="operator", payload={"name": name})
         return JSONResponse({"ok": True, "incidents": status()})
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -127,6 +135,7 @@ async def disable_incident(name: str) -> JSONResponse:
     try:
         disable(name)
         log.warning("incident_disabled", service="control", payload={"name": name})
+        audit_log(event="incident_disabled", actor="operator", payload={"name": name})
         return JSONResponse({"ok": True, "incidents": status()})
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

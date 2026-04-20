@@ -17,3 +17,9 @@ alerts:
     type: symptom-based
     owner: finops-owner
     runbook: docs/alerts.md#3-cost-budget-spike
+  - name: quality_regression
+    severity: P3
+    condition: quality_score_avg < 0.60 for 1h
+    type: degradation-based
+    owner: ai-agent-team
+    runbook: docs/alerts.md#4-quality-regression

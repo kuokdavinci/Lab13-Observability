@@ -38,3 +38,16 @@
   - shorten prompts
   - route easy requests to cheaper model
   - apply prompt cache
+
+## 4. Quality regression
+- Severity: P3
+- Trigger: `quality_score_avg < 0.60 for 1h`
+- Impact: the ai agent is producing lower quality or hallucinated answers
+- First checks:
+  1. Review recent chat traces with quality < 0.5
+  2. Check if a new model version was deployed
+  3. Inspect if `prompt_injection` or `adversarial_attack` incidents are active
+- Mitigation:
+  - Roll back prompt templates
+  - Increase few-shot examples
+  - Switch to a larger/more capable model

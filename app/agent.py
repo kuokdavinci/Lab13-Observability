@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from . import metrics
 from .mock_llm import FakeLLM
 from .mock_rag import retrieve
-from .pii import hash_user_id, summarize_text
+from .pii import hash_user_id, summarize_text, scrub_text
 from .tracing import langfuse_context, observe
 
 
@@ -32,8 +32,8 @@ def instrumented_retrieve(message: str):
 def instrumented_generate(llm: FakeLLM, prompt: str):
     response = llm.generate(prompt)
     langfuse_context.update_current_observation(
-        input=prompt,
-        output=response.text,
+        input=scrub_text(prompt),
+        output=scrub_text(response.text),
         usage_details={
             "input": response.usage.input_tokens,
             "output": response.usage.output_tokens
