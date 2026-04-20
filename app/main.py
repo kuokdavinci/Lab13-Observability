@@ -38,7 +38,7 @@ async def startup() -> None:
 @app.on_event("shutdown")
 async def shutdown():
     from .tracing import langfuse_context
-    log.info("app_shutting_down", service="api")
+    log.info("app_shutting_down", service="lifecycle")
     langfuse_context.flush()
 
 
