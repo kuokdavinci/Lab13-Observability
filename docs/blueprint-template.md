@@ -3,11 +3,10 @@
 > **Instruction**: Fill in all sections below. This report is designed to be parsed by an automated grading assistant. Ensure all tags (e.g., `[GROUP_NAME]`) are preserved.
 
 ## 1. Team Metadata
-- [GROUP_NAME]: 
-- [REPO_URL]: 
+- [GROUP_NAME]: Nhóm 10
+- [REPO_URL]: https://github.com/KuoKuok1234/Lab13-Observability
 - [MEMBERS]:
-  - Member A: [Name] | Role: Logging & PII
-  - Member B: [Name] | Role: Tracing & Enrichment
+  - Member A: Lê Trung Anh Quốc | Role: Logging & PII, Tracing & Enrichment
   - Member C: [Name] | Role: SLO & Alerts
   - Member D: [Name] | Role: Load Test & Dashboard
   - Member E: [Name] | Role: Demo & Report
@@ -24,8 +23,9 @@
 ## 3. Technical Evidence (Group)
 
 ### 3.1 Logging & Tracing
-- [EVIDENCE_CORRELATION_ID_SCREENSHOT]: [Path to image]
-- [EVIDENCE_PII_REDACTION_SCREENSHOT]: [Path to image]
+Record : {"service": "api", "payload": {"message_preview": "What is the policy for PII and credit card [REDACTED_CREDIT_CARD]?"}, "event": "request_received", "feature": "qa", "session_id": "s09", "model": "mock-gpt-4o", "correlation_id": "req-640bc873", "env": "dev", "user_id_hash": "4d14d5d4f719", "level": "info", "ts": "2026-04-20T02:38:07.450424Z"}
+- [EVIDENCE_CORRELATION_ID_SCREENSHOT]: 
+- [EVIDENCE_PII_REDACTION_SCREENSHOT]: ![alt text](screenshots/pii-traces.png)
 - [EVIDENCE_TRACE_WATERFALL_SCREENSHOT]: [Path to image]
 - [TRACE_WATERFALL_EXPLANATION]: (Briefly explain one interesting span in your trace)
 
