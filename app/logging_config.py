@@ -24,14 +24,17 @@ class JsonlFileProcessor:
 
 
 def scrub_event(_: Any, __: str, event_dict: dict[str, Any]) -> dict[str, Any]:
-    payload = event_dict.get("payload")
-    if isinstance(payload, dict):
-        event_dict["payload"] = {
-            k: scrub_text(v) if isinstance(v, str) else v for k, v in payload.items()
-        }
-    if "event" in event_dict and isinstance(event_dict["event"], str):
-        event_dict["event"] = scrub_text(event_dict["event"])
-    return event_dict
+    """Recursively scrub all string values in the log event to prevent PII leaks."""
+    def walk(obj: Any) -> Any:
+        if isinstance(obj, dict):
+            return {k: walk(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [walk(v) for v in obj]
+        elif isinstance(obj, str):
+            return scrub_text(obj)
+        return obj
+    
+    return walk(event_dict)
 
 
 
