@@ -48,7 +48,7 @@ class LabAgent:
         self._cache: dict[str, AgentResult] = {}
 
     @observe(name="chat")
-    def run(self, user_id: str, feature: str, session_id: str, message: str) -> AgentResult:
+    def run(self, user_id: str, feature: str, session_id: str, message: str, correlation_id: str = None) -> AgentResult:
         started = time.perf_counter()
         
         # 1. Cập nhật Trace Metadata NGAY LẬP TỨC (Dù là cache hit hay không)
@@ -91,7 +91,19 @@ class LabAgent:
                 quality_score=result.quality_score,
             )
 
-        # 3. Bước Retrieval (Tự động tạo Span con)
+        # 1. Cập nhật Trace Metadata
+        langfuse_context.update_current_trace(
+            user_id=hash_user_id(user_id),
+            session_id=session_id,
+            metadata={
+                "correlation_id": correlation_id,
+                "feature": feature, 
+                "env": os.getenv("APP_ENV", "dev")
+            },
+            tags=["lab-13-local"]
+        )
+
+        # 2. Bước Retrieval (Tự động tạo Span con)
         docs = instrumented_retrieve(message)
         
         # 4. Bước Generation (Tự động tạo Generation con)
@@ -137,6 +149,10 @@ class LabAgent:
         return (prompt_tokens * 0.00001) + (completion_tokens * 0.00003)
 
     def _heuristic_quality(self, question: str, answer: str, docs: list[str]) -> float:
+        from .incidents import STATE
+        if STATE.get("quality_regression"):
+            return 0.4  # Force below 0.6 threshold
+        
         if len(answer) < 20:
             return 0.2
         if any(doc[:20] in answer for doc in docs):
