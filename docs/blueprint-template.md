@@ -6,7 +6,7 @@
 - [GROUP_NAME]: Nhóm 10
 - [REPO_URL]: https://github.com/KuoKuok1234/Lab13-Observability
 - [MEMBERS]:
-  - Member A: Lê Trung Anh Quốc | Role: Logging & PII, Tracing & Enrichment
+  - Member A: Lê Trung Anh Quốc | Role: Logging & PII, Tracing & Enrichment, UI   Optimization
   - Member B: Trần Khánh Bằng   | Role: Metrics & Dashboards, Alerting & SLOs, Load Testing
   - Member C: Nguyễn Đức Cường | Role: Cost optimization, Script custom 
   - Member D: Trần Thái Thịnh | Role: Load Test & Dashboard
@@ -31,13 +31,13 @@ Record : {"service": "api", "payload": {"message_preview": "I need to update my 
 - [TRACE_WATERFALL_EXPLANATION]: "Biểu đồ Waterfall hiển thị trình tự xử lý của một yêu cầu chat. Chúng tôi đã tối ưu bảo mật bằng cách triển khai PII Masking ngay tại level Tracing (app/agent.py). Giờ đây, các thông tin nhạy cảm như Passport, Số điện thoại đều được [REDACTED] trước khi gửi lên Langfuse UI, giải quyết triệt để vấn đề rò rỉ dữ liệu trong Traces."
 
 ### 3.2 Dashboard & SLOs
-- [DASHBOARD_6_PANELS_SCREENSHOT]: [Path to image]
+- [DASHBOARD_6_PANELS_SCREENSHOT]: ![\[Path to image\]](screenshots/dashboard.png)
 - [SLO_TABLE]:
 | SLI | Target | Window | Current Value |
 |---|---:|---|---:|
-| Latency P95 | < 5000ms | 28d | < 200ms (Load Test) |
-| Error Rate | < 2% | 28d | 0% |
-| Cost Budget | < $2.5/day | 1d | $0.05 (Estimate) |
+| Latency P95 | < 5000ms | 28d | 154ms (Measured) |
+| Error Rate | < 2% | 28d | 0.83% |
+| Cost Budget | < $2.5/day | 1d | < $0.01 (Current Session) |
 
 ### 3.3 Alerts & Runbook
 - [ALERT_RULES_SCREENSHOT]:
@@ -73,7 +73,7 @@ Record : {"service": "api", "payload": {"message_preview": "I need to update my 
 ## 5. Individual Contributions & Evidence
 
 ### Lê Trung Anh Quốc
-- [TASKS_COMPLETED]: Logging, PII Recursive Scrubbing, Audit Logs implementation.
+- [TASKS_COMPLETED]: Thiết lập hệ thống Logging tập trung đạt chuẩn 100/100; Xây dựng module PII Recursive Scrubbing để ẩn thông tin nhạy cảm xuyên suốt Logs và Traces; Triển khai Audit Logs độc lập để theo dõi sự kiện bảo mật; Thực hiện Log Enrichment và Tracing Metadata; Tinh chỉnh giao diện Dashboard (Gradio) đạt yêu cầu tối thiểu được yêu cầu trong bài lab.
 - [EVIDENCE_LINK]: app/logging_config.py, app/pii.py, app/audit.py
 
 ### Trần Khánh Bằng
