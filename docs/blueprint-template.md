@@ -8,7 +8,7 @@
 - [MEMBERS]:
   - Member A: Lê Trung Anh Quốc | Role: Logging & PII, Tracing & Enrichment
   - Member B: Trần Khánh Bằng   | Role: Metrics & Dashboards, Alerting & SLOs, Load Testing
-  - Member C: [Name] | Role: [Name] 
+  - Member C: Nguyễn Đức Cường | Role: Cost optimization, Auto-instrument 
   - Member D: [Name] | Role: Load Test & Dashboard
   - Member E: [Name] | Role: Demo & Report
 
@@ -80,6 +80,12 @@ Record : {"service": "api", "payload": {"message_preview": "I need to update my 
 - [TASKS_COMPLETED]: Tracing implementation, PII-Safe Tracing Bonus, Dashboard Specification, Alert Rule Configuration, Load Testing.
 - [EVIDENCE_LINK]: app/agent.py, config/alert_rules.yaml, docs/dashboard-spec.md
 
+### Nguyễn Đức Cường
+[TASKS_COMPLETED]: Triển khai bộ nhớ đệm (Exact-match Cache) để tối ưu chi phí LLM, viết script tự động hóa báo cáo từ log dữ liệu, thiết lập Metric đo lường hiệu quả Cache (Prometheus) và sửa lỗi kiến trúc log để đạt điểm 100/100 validation.
+
+[EVIDENCE_LINK]: 
+
+app/agent.py,app/metrics.py, scripts/auto_report.py,app/main.py
 ---
 
 ## 6. Bonus Items (Optional)
