@@ -81,6 +81,7 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             feature=body.feature,
             session_id=body.session_id,
             message=body.message,
+            correlation_id=request.state.correlation_id,
         )
         log.info(
             "response_sent",
@@ -89,6 +90,7 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             tokens_in=result.tokens_in,
             tokens_out=result.tokens_out,
             cost_usd=result.cost_usd,
+            quality_score=result.quality_score,
             payload={"answer_preview": summarize_text(result.answer)},
         )
         record_request(
@@ -98,6 +100,9 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
             tokens_out=result.tokens_out,
             quality_score=result.quality_score,
         )
+        from .tracing import langfuse_context
+        langfuse_context.flush()
+        
         return ChatResponse(
             answer=result.answer,
             correlation_id=request.state.correlation_id,

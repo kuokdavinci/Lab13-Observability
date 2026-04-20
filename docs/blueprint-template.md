@@ -7,7 +7,8 @@
 - [REPO_URL]: https://github.com/KuoKuok1234/Lab13-Observability
 - [MEMBERS]:
   - Member A: Lê Trung Anh Quốc | Role: Logging & PII, Tracing & Enrichment
-  - Member C: [Name] | Role: SLO & Alerts
+  - Member B: Trần Khánh Bằng   | Role: Metrics & Dashboards, Alerting & SLOs, Load Testing
+  - Member C: [Name] | Role: [Name] 
   - Member D: [Name] | Role: Load Test & Dashboard
   - Member E: [Name] | Role: Demo & Report
 
@@ -39,29 +40,45 @@ Record : {"service": "api", "payload": {"message_preview": "I need to update my 
 | Cost Budget | < $2.5/day | 1d | $0.05 (Estimate) |
 
 ### 3.3 Alerts & Runbook
-- [ALERT_RULES_SCREENSHOT]: [Path to image]
-- [SAMPLE_RUNBOOK_LINK]: [config/alert_rules.yaml](file:///Users/bangtran/Obsidian_notes/Obsidian/Courses/4th%20year/assignments/Lab13-Observability/config/alert_rules.yaml)
+- [ALERT_RULES_SCREENSHOT]:
+  - High Latency ![alt text](screenshots/alert_high_latency.png)
+  - Tool fail ![alt text](screenshots/alert_tool_fail.png)
+  - Cost Spike ![alt text](screenshots/alert_cost_spike.png)
+  - Quality regression ![alt text](screenshots/alert_qualiti_regression.png)
+- [SAMPLE_RUNBOOK_LINK]: [config/alert_rules.yaml](config/alert_rules.yaml)
 
 ---
 
 ## 4. Incident Response (Group)
-- [SCENARIO_NAME]: rag_slow
-- [SYMPTOMS_OBSERVED]: P95 Latency spike above 5s.
-- [ROOT_CAUSE_PROVED_BY]: langfuse trace id: trace-rag-slow-001
-- [FIX_ACTION]: Enable incident toggle to disable recursive retrieval.
-- [PREVENTIVE_MEASURE]: Added a Quality Regression alert (Bonus) to catch performance drift early.
+- [SCENARIO_NAME]: 
+  1. rag_slow (P2)
+  2. quality_regression (P3)
+  3. tool_fail (P1)
+  4. cost_spike (P2)
+- [SYMPTOMS_OBSERVED]: 
+  - Latency spike (>3000ms), 
+  - Accuracy drop (Quality 0.4), 
+  - Error rate spike (500 status codes), 
+  - Cost budget breach ($0.02+/req).
+- [ROOT_CAUSE_PROVED_BY]: 
+  - **High Latency**: Trace `req-502c28ad` (Retrieval span bottleneck).
+  - **Quality Drop**: Trace `req-034b4b4b` (Heuristic score sub-threshold).
+  - **System Error (500)**: Trace `req-c10bd27a` (Vector store timeout simulation).
+  - **Cost Spike**: Trace `req-3691333c` (Token inflation logic triggered).
+- [FIX_ACTION]: All incidents were mitigated by disabling the corresponding feature toggles via the `/incidents/{name}/disable` endpoint, restoring the system to its "All Clear" baseline.
+- [PREVENTIVE_MEASURE]: We implemented a comprehensive alerting suite in `config/alert_rules.yaml` with graduated severities (P1-P3) based on symptom types (Symmetry, Error, Cost, Quality).
 
 ---
 
 ## 5. Individual Contributions & Evidence
 
-### [MEMBER_A_NAME]
+### Lê Trung Anh Quốc
 - [TASKS_COMPLETED]: Logging, PII Recursive Scrubbing, Audit Logs implementation.
 - [EVIDENCE_LINK]: app/logging_config.py, app/pii.py, app/audit.py
 
-### [MEMBER_B_NAME]
-- [TASKS_COMPLETED]: Tracing, PII-Safe Tracing Bonus, Load Testing.
-- [EVIDENCE_LINK]: app/agent.py
+### Trần Khánh Bằng
+- [TASKS_COMPLETED]: Tracing implementation, PII-Safe Tracing Bonus, Dashboard Specification, Alert Rule Configuration, Load Testing.
+- [EVIDENCE_LINK]: app/agent.py, config/alert_rules.yaml, docs/dashboard-spec.md
 
 ---
 
