@@ -1,9 +1,22 @@
+# Environments
 .venv/
+.env
+
+# Python
 __pycache__/
 *.pyc
-.DS_Store
-data/logs.jsonl
-data/audit.jsonl
-.env
 .pytest_cache/
+
+# Data & Logs
+data/
+*.jsonl
+
+# Scratch & Tests
+test_langfuse.py
+
+# System & IDE
+.DS_Store
 .antigravity/
+.gemini/
+.idea/
+.vscode/
